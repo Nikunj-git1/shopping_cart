@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form>
+    <input type="text" name="adminName" id="adminName"><br>
+    <input type="password" name="pswd" id="pswd"><br>
+    <input type="button" value="Login" onclick="login()"><br>
+</form>
+<script>
+    function login(){
+        var data = {
+            "adminName" : document.getElementById("adminName").value,
+            "pswd" : document.getElementById("pswd").value
+        };
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://localhost:8080/admin/login', true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.response);
+            console.log(response)
+            if(response.status)
+            {
+                sessionStorage.setItem('token', response.data);
+                window.location='/ui/thymlf/welcome';
+            }
+            else{
+                alert("Invalid");
+            }
+            // Process the response data here
+          } else {
+            console.log("Error")
+            // Handle error
+          }
+        };
+        xhr.send(JSON.stringify(data));
+    }
+</script>
+</body>
+</html>

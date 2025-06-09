@@ -1,0 +1,101 @@
+openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    bearerAuth:                # JWT टोकन के लिए scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []             # सभी APIs पर लागू होगा
+
+tags:
+  - name: Admin Panel
+  - name: Admin Categories
+  - name: Admin Sub-Categories
+  - name: Admin Items
+  - name: Admin Orders
+  - name: Customer Panel
+  - name: Customer Items
+
+paths:
+  /admin:
+    get:
+      tags:
+        - Admin Panel
+      summary: Admin main panel access
+      security:
+        - bearerAuth: []       # आवश्यक अगर आप हर API पर टोकन चाहें
+      responses:
+        '200':
+          description: Admin panel response
+
+  /admin/cat:
+    get:
+      tags:
+        - Admin Categories
+      summary: Get all categories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of categories
+
+  /admin/sub-cat:
+    get:
+      tags:
+        - Admin Sub-Categories
+      summary: Get all sub-categories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of sub-categories
+
+  /admin/item:
+    get:
+      tags:
+        - Admin Items
+      summary: Get all items
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of items
+
+  /admin/order:
+    get:
+      tags:
+        - Admin Orders
+      summary: Get all orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of orders
+
+  /customer:
+    get:
+      tags:
+        - Customer Panel
+      summary: Customer panel
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Customer response
+
+  /customer/item:
+    get:
+      tags:
+        - Customer Items
+      summary: Get customer-visible items
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Customer item list
