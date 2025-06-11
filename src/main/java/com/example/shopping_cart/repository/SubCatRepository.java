@@ -15,7 +15,7 @@ public interface SubCatRepository extends JpaRepository<SubCatEntity, Integer> {
 
     List<SubCatEntity> findByStatus(String status);
 
-    Optional<SubCatEntity> findBysubCatName(String subCatName);
+    Optional<SubCatEntity> findBySubCatNameIgnoreCase(String subCatName);
 
     boolean existsBySubCatNameIgnoreCaseAndSubCatIdNot(String subCatName, Integer subCatId);
 

@@ -6,9 +6,13 @@ import com.example.shopping_cart.comman_response_dto.ResGenerator;
 import com.example.shopping_cart.request_dto.SubCatDTOUpdate;
 import com.example.shopping_cart.service.SubCatService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -17,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/sub-cat")
 @Tag(name = "Sub-category API", description = "For CRUD operation of sub-categories.")
 
-
+@Validated
 public class SubCatController {
 
     @Autowired
@@ -25,10 +29,12 @@ public class SubCatController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<CommonResponse> create(@RequestBody SubCatDTO subCatDTO) {
-        Integer createdBy = 1;
+    public ResponseEntity<CommonResponse> create(@Valid
+                                                 @RequestBody SubCatDTO subCatDTO,
+                                                 @AuthenticationPrincipal User user) {
 
-        return ResGenerator.create("Sub-category create successfully", subCatService.create(subCatDTO, createdBy));
+        return ResGenerator.create(
+                "Sub-category create successfully", subCatService.create(subCatDTO, user));
     }
 
     @GetMapping("/get-list")
@@ -47,7 +53,8 @@ public class SubCatController {
     public ResponseEntity<CommonResponse> updateStatus(@PathVariable int subCatId,
                                                        @PathVariable String status) {
 
-        return ResGenerator.success("Sub-category update successfully", subCatService.updateStatus(subCatId, status));
+        return ResGenerator.success(
+                "Sub-category update successfully", subCatService.updateStatus(subCatId, status));
     }
 
     @GetMapping("/get-list-cat-id")

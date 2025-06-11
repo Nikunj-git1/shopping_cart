@@ -31,11 +31,11 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void signup(AdminDTO adminDTO) {
 
-        Optional<AdminEntity> existingName = adminRepository.findByAdminName(adminDTO.getAdminName());
-        if (existingName.isPresent()) {
-            throw new MyCustomException(
-                    "This admin name '" + adminDTO.getAdminName() + "' is  already exists.");
-        }
+        adminRepository.findByAdminName(adminDTO.getAdminName())
+                .ifPresent(existing -> {
+                    throw new MyCustomException(
+                            "This admin name '" + adminDTO.getAdminName() + "' is  already exists.");
+                });
 
         AdminEntity adminEntity = modelMapper.map(adminDTO, AdminEntity.class);
         adminEntity.setPswd(passwordEncoder.encode(adminDTO.getPswd()));

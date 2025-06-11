@@ -3,12 +3,12 @@ package com.example.shopping_cart.request_dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Builder
-@ToString
+
 public class SubCatDTO {
 
     @NotNull(message = "Category ID cannot be null")

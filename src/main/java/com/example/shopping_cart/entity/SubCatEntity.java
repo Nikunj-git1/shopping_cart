@@ -15,19 +15,17 @@ import java.util.Date;
 
 @Builder
 
-@NamedQuery(name = "SubCatEntity.findByCategory",
-        query = "select s from SubCatEntity s where s.catId = ?1")
+//@NamedQuery(name = "SubCatEntity.findByCategory",
+//        query = "select s from SubCatEntity s where s.catId = ?1")
 
 public class SubCatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Integer subCatId;
-    private int catId;
+    private Integer catId;
     private String subCatName;
     private String status;
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt = new Date();
     private Integer createdBy;
-
 }

@@ -7,6 +7,7 @@ import com.example.shopping_cart.entity.CustEntity;
 import com.example.shopping_cart.repository.AdminRepository;
 import com.example.shopping_cart.repository.CustRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,13 +33,11 @@ public class UserLoginServiceImpl implements UserDetailsService {
 
 
     public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-log.info("loadUserByUsername --------{}");
         Set<GrantedAuthority> set = new HashSet<>();
 
         Optional<AdminEntity> optionalAdminEntity = adminRepository.findByAdminName(name);
 
         if (optionalAdminEntity.isPresent()) {
-
             AdminEntity adminEntity = optionalAdminEntity.get();
             GrantedAuthority authority = new SimpleGrantedAuthority(adminEntity.getAdminRole());
             set.add(authority);
@@ -50,10 +49,31 @@ log.info("loadUserByUsername --------{}");
 
         if (optionalCustEntity.isPresent()) {
 
-        return new User(name, optionalCustEntity.get().getPswd(), set);
+            return new User(name, optionalCustEntity.get().getPswd(), set);
         }
 
         throw new MyCustomException("Account not found");
 
+    }
+
+    public Integer getAdminId(User user) {
+        Optional<AdminEntity> optionalAdminEntity = adminRepository.findByAdminName(user.getUsername());
+
+        if (optionalAdminEntity.isEmpty()) {
+            throw new MyCustomException("User not found");
+        } else {
+
+            return optionalAdminEntity.get().getAdminId();
+        }
+    }
+
+    public Integer getCustId(User user) {
+        Optional<CustEntity> optionalCustEntity = custRepository.findByCustName(user.getUsername());
+
+        if (optionalCustEntity.isEmpty()) {
+            throw new MyCustomException("User not found");
+        } else
+
+            return optionalCustEntity.get().getCustId();
     }
 }

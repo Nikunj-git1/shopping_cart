@@ -39,7 +39,7 @@ public class AdminController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse> adminLogin(@Valid @RequestBody AdminDTO adminDTO) {
+    public ResponseEntity<CommonResponse> login(@Valid @RequestBody AdminDTO adminDTO) {
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 adminDTO.getAdminName(), adminDTO.getPswd()));
