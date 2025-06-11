@@ -46,7 +46,7 @@ public class CatController {
 
     @PostMapping("/create-by-import")
     public ResponseEntity<CommonResponse> createByImport(@RequestParam("excelFile") MultipartFile excelFile,
-                                                         @AuthenticationPrincipal User user) {
+                                                         @AuthenticationPrincipal User user) throws Exception {
         Map<String, Object> result = catService.createByImportExcel(excelFile, user);
 
         return ResGenerator.create("Excel file imported successfully", result);
@@ -57,7 +57,7 @@ public class CatController {
         catService.exportCategoryPdf();
 
         return ResGenerator.success(
-                "PDF saved to local file system at D:\\Git\\shopping_cart\\pdf-generated",
+                "PDF saved to local file system at D:/java_practice/shopping_cart/pdf-generated",
                 null);
     }
 

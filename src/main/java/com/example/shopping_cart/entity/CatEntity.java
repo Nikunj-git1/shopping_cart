@@ -8,10 +8,12 @@ import java.util.Date;
 @Entity
 @Table(name = "category")
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 
+@Data
 @Builder
 
 public class CatEntity {
