@@ -4,72 +4,78 @@ import com.example.shopping_cart.entity.OrderEntity;
 import com.example.shopping_cart.entity.OrderItemEntity;
 import com.example.shopping_cart.repository.OrderItemRepository;
 import com.example.shopping_cart.repository.OrderRepository;
+import com.example.shopping_cart.request_dto.OrderDTOResponse;
 import com.example.shopping_cart.request_dto.OrderItemDTO;
 import com.example.shopping_cart.service.OrderService;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
+import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
 
 @Service
 
-@Slf4j
 
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
-    OrderRepository orderRepository;
+    private UserLoginServiceImpl userLoginServiceImpl;
 
     @Autowired
-    OrderItemRepository orderItemRepository;
+    private OrderRepository orderRepository;
 
     @Autowired
-    NamedParameterJdbcTemplate npJdbcTemplate;
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private NamedParameterJdbcTemplate npJdbcTemplate;
 
 
+    @Override
     @Transactional
-    public Integer create(List<OrderItemDTO> itemList, Integer custId) {
+    @CachePut(value = "orderListCache", key = "#result")
+    public Integer create(List<OrderItemDTO> itemList, User user) {
+        Integer custId = userLoginServiceImpl.getCustId(user);
 
         OrderEntity order = new OrderEntity();
-
         order.setCustId(custId);
-
         orderRepository.save(order);
 
-        List<OrderItemEntity> orderItemEntityList = new ArrayList<>();
-        for (OrderItemDTO orderItemDTO : itemList) {
+        Integer orderId = order.getOrderId();
 
-            OrderItemEntity item = new OrderItemEntity();
-
-            item.setOrderId(order.getOrderId());
-            item.setItemId(orderItemDTO.getItemId());
-            item.setQty(orderItemDTO.getQty());
-            item.setUnitPrice(orderItemDTO.getUnitPrice());
-
-            orderItemEntityList.add(item);
-
-        }
-
-        orderItemRepository.saveAll(orderItemEntityList);
+        List<OrderItemEntity> orderItems = itemList.stream()
+                .map(dto -> {
+                    OrderItemEntity item = new OrderItemEntity();
+                    item.setOrderId(orderId);
+                    item.setItemId(dto.getItemId());
+                    item.setQty(dto.getQty());
+                    item.setUnitPrice(dto.getUnitPrice());
+                    return item;
+                })
+                .collect(Collectors.toList());
 
 
         return order.getOrderId();
     }
 
-    public List<Map<String, Object>> getOrder(Integer orderId) {
 
-        Optional<OrderEntity> isOrderId = orderRepository.findByOrderId(orderId);
-        if (isOrderId.isEmpty()) {
-        }
+    @Override
+    @Cacheable(value = "orderListCache", key = "'ORDER_' + #orderId",
+            unless = "#result == null || #result.isEmpty()")
+    public List<Map<String, Object>> getOrder(Integer orderId) {
+        orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "This order id '" + orderId + "' not found."));
 
         String sql = """
                 select oi.order_id, oi.order_item_id, oi.item_id, p.item_name from order_item oi
@@ -79,34 +85,36 @@ public class OrderServiceImpl implements OrderService {
                 """;
         List<Map<String, Object>> result = npJdbcTemplate.queryForList(sql, Map.of("orderId", orderId));
 
-
         return result;
     }
 
 
-    public OrderEntity updateStatus(Integer orderId, String status) {
+    @Override
+    @CacheEvict(value = "orderListCache", allEntries = true)
+    public OrderDTOResponse updateStatus(Integer orderId, String status, User user) {
+        OrderEntity orderEntity = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("This order id '" + orderId + "' not found."));
 
-        Optional<OrderEntity> optionalOrderEntity = orderRepository.findById(orderId);
-        if (optionalOrderEntity.isEmpty()) {
+        Integer adminId = userLoginServiceImpl.getAdminId(user);
 
-        }
-
-        OrderEntity orderEntity = optionalOrderEntity.get();
         orderEntity.setStatus(status);
-
-
-        String dt = null;
-        if (orderEntity.getOrderDate() != null) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            dt = sdf.format(orderEntity.getOrderDate());
-
-            Date formattedOrderDate = Date.valueOf(dt);
-            orderEntity.setOrderDate(formattedOrderDate);
-        }
-
+        orderEntity.setUpdatedAt(new java.util.Date());
+        orderEntity.setUpdatedBy(adminId);
         orderEntity = orderRepository.save(orderEntity);
 
-        return orderEntity;
+        String orderDate = formatTimestamp(orderEntity.getOrderDate());
+        String updatedAt = formatTimestamp(orderEntity.getUpdatedAt());
+
+        OrderDTOResponse orderDTOResponse = new OrderDTOResponse();
+
+        orderDTOResponse.setOrderId(orderEntity.getOrderId());
+        orderDTOResponse.setCustId(orderEntity.getCustId());
+        orderDTOResponse.setOrderDate(orderDate);
+        orderDTOResponse.setStatus(orderEntity.getStatus());
+        orderDTOResponse.setUpdatedAt(updatedAt);
+        orderDTOResponse.setUpdatedBy(orderEntity.getUpdatedBy());
+
+        return orderDTOResponse;
 
     }
 }

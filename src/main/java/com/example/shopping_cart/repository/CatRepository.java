@@ -15,6 +15,4 @@ public interface CatRepository extends JpaRepository<CatEntity, Integer> {
     List<CatEntity> findByStatus(String status);
 
     Optional<CatEntity> findByCatNameIgnoreCase(String catName);
-
-    List<CatEntity> findAllByCatNameIn(List<String> catNames);
 }

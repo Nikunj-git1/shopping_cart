@@ -8,12 +8,10 @@ import java.util.Date;
 @Entity
 @Table(name = "category")
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 
-@Data
 @Builder
 
 public class CatEntity {
@@ -26,4 +24,6 @@ public class CatEntity {
     private String status;
     private Date createdAt = new Date();
     private Integer createdBy;
+    private Date updatedAt;
+    private Integer updatedBy;
 }

@@ -13,5 +13,4 @@ public class MyCustomException extends RuntimeException {
 
         return "EmptyDataException{message='" + super.getMessage() + '\'' + '}';
     }
-
 }

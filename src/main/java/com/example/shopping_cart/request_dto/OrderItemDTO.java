@@ -14,8 +14,9 @@ import lombok.NoArgsConstructor;
 
 public class OrderItemDTO {
 
+    @NotNull(message = "Order item ID cannot be null")
+    @Positive(message = "Order item ID must be a positive number")
     private Integer orderItemId;
-
 
     @NotNull(message = "Order ID cannot be null")
     @Positive(message = "Order ID must be a positive number")
@@ -29,7 +30,7 @@ public class OrderItemDTO {
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer qty;
 
-    @NotNull(message = "Unit price cannot be null")
+    @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.1", inclusive = true, message = "Unit price must be at least 0.1")
-    private Integer unitPrice;
+    private Double unitPrice;
 }

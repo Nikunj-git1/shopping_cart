@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-@JsonPropertyOrder({"catId", "catName", "status", "createdAt", "createdBy"})
+@JsonPropertyOrder({"catId", "catName", "status", "createdAt", "createdBy", "updatedAt", "updatedBy"})
 
 public class CatDTOResponse {
 
@@ -18,6 +18,6 @@ public class CatDTOResponse {
     private String status;
     private String createdAt;
     private Integer createdBy;
-
-
+    private String updatedAt;
+    private Integer updatedBy;
 }

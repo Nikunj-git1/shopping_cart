@@ -2,7 +2,6 @@ package com.example.shopping_cart.controller;
 
 import com.example.shopping_cart.comman_response_dto.CommonResponse;
 import com.example.shopping_cart.comman_response_dto.ResGenerator;
-import com.example.shopping_cart.repository.AdminRepository;
 import com.example.shopping_cart.request_dto.CatDTO;
 import com.example.shopping_cart.request_dto.CatDTOUpdate;
 import com.example.shopping_cart.service.CatService;
@@ -34,15 +33,13 @@ public class CatController {
     @Autowired
     CatService catService;
 
-    @Autowired
-    AdminRepository adminRepository;
-
 
     @PostMapping("/create")
-    public ResponseEntity<CommonResponse> create(@Valid @RequestBody CatDTO catDTO, @AuthenticationPrincipal User user) {
+    public ResponseEntity<CommonResponse> create(@RequestBody @Valid CatDTO catDTO, @AuthenticationPrincipal User user) {
 
         return ResGenerator.create("Category create successfully", catService.create(catDTO, user));
     }
+
 
     @PostMapping("/create-by-import")
     public ResponseEntity<CommonResponse> createByImport(@RequestParam("excelFile") MultipartFile excelFile,
@@ -52,8 +49,10 @@ public class CatController {
         return ResGenerator.create("Excel file imported successfully", result);
     }
 
+
     @GetMapping("/generate-pdf")
     public ResponseEntity<CommonResponse> savePdfToLocal() {
+
         catService.exportCategoryPdf();
 
         return ResGenerator.success(
@@ -61,42 +60,55 @@ public class CatController {
                 null);
     }
 
+
     @GetMapping("/get-list")
-    public ResponseEntity<CommonResponse> getList(@Valid
-                                                  @RequestParam(required = false)
-                                                  @Pattern(regexp = "^(Active|Inactive)?$",
-                                                          message = "Status must be either Active, Inactive or Blank")
-                                                  String status) {
+    public ResponseEntity<CommonResponse> getList(
+            @RequestParam(required = false)
+            @Pattern(
+                    regexp = "^(Active|Inactive|[Aa][Ll][Ll])?$",
+                    message = "Status must be either 'Active', 'Inactive', 'All' (any case), or empty"
+            )
+            String status) {
 
         return ResGenerator.success("List of category", catService.getList(status));
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<CommonResponse> update(@Valid @RequestBody CatDTOUpdate catDTOUpdate) {
 
-        return ResGenerator.success("Category updated successfully", catService.update(catDTOUpdate));
+    @PutMapping("/update")
+    public ResponseEntity<CommonResponse> update(@RequestBody @Valid CatDTOUpdate catDTOUpdate,
+                                                 @AuthenticationPrincipal User user) {
+
+        return ResGenerator.success("Category updated successfully", catService.update(catDTOUpdate, user));
     }
+
 
     @PatchMapping("/update-status/{catId}/{status}")
-    public ResponseEntity<CommonResponse> updateStatus(@PathVariable("catId")
-                                                       @NotNull(message = "Category ID must not be null")
-                                                       @Positive(message = "Category ID must be a positive number")
-                                                       Integer catId,
+    public ResponseEntity<CommonResponse> updateStatus(
+            @PathVariable(required = true)
+            @NotNull(message = "Category ID must not be null")
+            @Positive(message = "Category ID must be a positive number")
+            Integer catId,
 
-                                                       @PathVariable("status")
-                                                       @NotBlank(message = "Status is required")
-                                                       @Pattern(regexp = "^(Active|Inactive)$",
-                                                               message = "Status must be either Active or Inactive")
-                                                       String status) {
+            @PathVariable(required = true)
+            @NotBlank(message = "Status is required")
+            @Pattern(regexp = "^(Active|Inactive)$", message = "Status must be either Active or Inactive")
+            String status,
 
-        return ResGenerator.success("Category status update successfully", catService.updateStatus(catId, status));
+            @AuthenticationPrincipal User user) {
+
+        return ResGenerator.success(
+                "Category status update successfully",
+                catService.updateStatus(catId, status, user));
     }
 
+
     @DeleteMapping("/delete")
-    public ResponseEntity<CommonResponse> delete(@NotNull(message = "Category ID must not be null")
-                                                 @RequestParam int catId) {
+    public ResponseEntity<CommonResponse> delete(@RequestParam(required = true)
+                                                 @NotNull(message = "Category ID must not be null")
+                                                 @Positive(message = "Category ID must be a positive number")
+                                                 Integer catId) {
 
         return new ResponseEntity<>(new CommonResponse(
-                true,"This category has been deleted", catService.delete(catId)), HttpStatus.OK);
+                true, "This category has been deleted", catService.delete(catId)), HttpStatus.OK);
     }
 }

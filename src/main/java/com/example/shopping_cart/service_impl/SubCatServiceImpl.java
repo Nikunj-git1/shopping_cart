@@ -6,16 +6,20 @@ import com.example.shopping_cart.request_dto.SubCatDTO;
 import com.example.shopping_cart.request_dto.SubCatDTOResponse;
 import com.example.shopping_cart.request_dto.SubCatDTOUpdate;
 import com.example.shopping_cart.service.SubCatService;
-import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Slf4j
+import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
+
 @Service
 
 public class SubCatServiceImpl implements SubCatService {
@@ -24,84 +28,114 @@ public class SubCatServiceImpl implements SubCatService {
     private SubCatRepository subCatRepository;
 
     @Autowired
+    private UserLoginServiceImpl userLoginServiceImpl;
+
+    @Autowired
     private ModelMapper modelMapper;
 
 
-    public SubCatDTOResponse create(SubCatDTO subCatDTO, Integer createdBy) {
+    @Override
+    @CachePut(value = "subCatCache", key = "#result.subCatId")
+    public SubCatDTOResponse create(SubCatDTO subCatDTO, User user) {
+        subCatRepository.findBySubCatNameIgnoreCase(subCatDTO.getSubCatName())
+                .ifPresent(subCatEntity -> {
+                    throw new DataIntegrityViolationException(
+                            "This sub category '" + subCatDTO.getSubCatName() + "' is  already exists.");
+                });
 
-        Optional<SubCatEntity> subCatEntityOptional = subCatRepository.findBysubCatName(subCatDTO.getSubCatName());
+        Integer createdBy = userLoginServiceImpl.getAdminId(user);
 
-        if (!subCatEntityOptional.isEmpty()) {
-
-        }
-
-        SubCatEntity subCatEntity = modelMapper.map(subCatDTO, SubCatEntity.class);
-       subCatEntity.setCreatedBy(createdBy);
+        SubCatEntity subCatEntity = new SubCatEntity();
+        subCatEntity.setCatId(subCatDTO.getCatId());
+        subCatEntity.setSubCatName(subCatDTO.getSubCatName());
+        subCatEntity.setStatus(subCatDTO.getStatus());
+        subCatEntity.setCreatedBy(createdBy);
         subCatEntity = subCatRepository.save(subCatEntity);
 
-        return modelMapper.map(subCatEntity, SubCatDTOResponse.class);
+        return mapToResponse(subCatEntity);
     }
 
-    public List<SubCatDTOResponse> getList(String status) {
 
+    @Override
+    @Cacheable(
+            value = "subCatListCache",
+            key = "#status == null || #status.isEmpty() || #status.equalsIgnoreCase('All') ? 'ALL' : #status",
+            unless = "#result == null || #result.isEmpty()"
+    )
+    public List<SubCatDTOResponse> getList(String status) {
         boolean isAllStatus = status == null || status.isEmpty() || status.equalsIgnoreCase("All");
 
         List<SubCatEntity> subCatEntityList = isAllStatus ?
                 subCatRepository.findAll() : subCatRepository.findByStatus(status);
 
-        List<SubCatDTOResponse> subCatDTOResponseList = new ArrayList<>();
-        for (SubCatEntity subCatEntity : subCatEntityList) {
-            subCatDTOResponseList.add(modelMapper.map(subCatEntity, SubCatDTOResponse.class));
-        }
 
-        return subCatDTOResponseList;
+        return subCatEntityList.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    public SubCatDTOResponse update(SubCatDTOUpdate subCatDTOUpdate) {
 
-        Optional<SubCatEntity> optionalSubCatEntity = subCatRepository.findById(subCatDTOUpdate.getSubCatId());
-        if (optionalSubCatEntity.isEmpty()) {
-        }
+    @Override
+    @CacheEvict(value = "subCatListCache", allEntries = true)
+    public SubCatDTOResponse update(SubCatDTOUpdate subCatDTOUpdate, User user) {
+        SubCatEntity subCatEntity = subCatRepository.findById(subCatDTOUpdate.getSubCatId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "This sub category id '" + subCatDTOUpdate.getCatId() + "' is not found."));
 
-        boolean isDuplicate = subCatRepository.existsBySubCatNameIgnoreCaseAndSubCatIdNot(
+        if (subCatRepository.existsBySubCatNameIgnoreCaseAndSubCatIdNot(
                 subCatDTOUpdate.getSubCatName(),
-                subCatDTOUpdate.getSubCatId());
-        if (isDuplicate) {
-
+                subCatDTOUpdate.getSubCatId())) {
+            throw new DataIntegrityViolationException(
+                    "This category name '" + subCatDTOUpdate.getSubCatName() + "' already exists.");
         }
 
-        SubCatEntity subCatEntity = optionalSubCatEntity.get();
+        Integer updatedBy = userLoginServiceImpl.getAdminId(user);
+
         modelMapper.map(subCatDTOUpdate, subCatEntity);
+        subCatEntity.setUpdatedBy(updatedBy);
+        subCatEntity.setUpdatedAt(new Date());
         subCatEntity = subCatRepository.save(subCatEntity);
 
-        return modelMapper.map(subCatEntity, SubCatDTOResponse.class);
+        return mapToResponse(subCatEntity);
     }
 
-    public SubCatDTOResponse updateStatus(int subCatId, String status) {
 
-        Optional<SubCatEntity> optionalSubCateEntity = subCatRepository.findById(subCatId);
+    @Override
+    @CacheEvict(value = "subCatListCache", allEntries = true)
+    public SubCatDTOResponse updateStatus(Integer subCatId, String status, User user) {
+        SubCatEntity subCatEntity = subCatRepository.findById(subCatId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "This sub category id '" + subCatId + "' is not found."));
 
-        if (optionalSubCateEntity.isEmpty()) {
-        }
+        Integer updatedBy = userLoginServiceImpl.getAdminId(user);
 
-        SubCatEntity subCatEntity = optionalSubCateEntity.get();
         subCatEntity.setStatus(status);
+        subCatEntity.setUpdatedAt(new Date());
+        subCatEntity.setUpdatedBy(updatedBy);
         subCatEntity = subCatRepository.save(subCatEntity);
 
-        return modelMapper.map(subCatEntity, SubCatDTOResponse.class);
+        return mapToResponse(subCatEntity);
     }
 
-    public List<SubCatDTOResponse> getListCatId(int catId) {
 
+    @Override
+    public List<SubCatDTOResponse> getListCatId(Integer catId) {
         List<SubCatEntity> subCatEntityList = subCatRepository.findByCatId(catId);
 
         if (subCatEntityList.isEmpty()) {
+            throw new NoSuchElementException("This category id '" + catId + "' is not found.");
         }
 
-        List<SubCatDTOResponse> subCategoryDTOResponseList = new ArrayList<>();
-        for (SubCatEntity subCatEntity : subCatEntityList) {
-            subCategoryDTOResponseList.add(modelMapper.map(subCatEntity, SubCatDTOResponse.class));
-        }
-        return subCategoryDTOResponseList;
+        return subCatEntityList.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    private SubCatDTOResponse mapToResponse(SubCatEntity subCatEntity) {
+        SubCatDTOResponse response = modelMapper.map(subCatEntity, SubCatDTOResponse.class);
+        response.setCreatedAt(formatTimestamp(subCatEntity.getCreatedAt()));
+        response.setUpdatedAt(formatTimestamp(subCatEntity.getUpdatedAt()));
+        return response;
     }
 }

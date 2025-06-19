@@ -32,7 +32,7 @@ public class UserLoginServiceImpl implements UserDetailsService {
 
 
     public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-log.info("loadUserByUsername --------{}");
+        log.info("loadUserByUsername --------{}");
         Set<GrantedAuthority> set = new HashSet<>();
 
         Optional<AdminEntity> optionalAdminEntity = adminRepository.findByAdminName(name);
@@ -50,10 +50,27 @@ log.info("loadUserByUsername --------{}");
 
         if (optionalCustEntity.isPresent()) {
 
-        return new User(name, optionalCustEntity.get().getPswd(), set);
+            return new User(name, optionalCustEntity.get().getPswd(), set);
         }
 
         throw new MyCustomException("Account not found");
 
+    }
+
+
+    public Integer getAdminId(User user) {
+        AdminEntity adminEntity = adminRepository.findByAdminName(user.getUsername())
+                .orElseThrow(() -> new MyCustomException("User not found"));
+
+        return adminEntity.getAdminId();
+    }
+
+
+    public Integer getCustId(User user) {
+        Optional<CustEntity> custEntity = custRepository.findByCustName(user.getUsername());
+
+//                .orElseThrow(() -> new MyCustomException("User not found"));
+
+        return custEntity.get().getCustId();
     }
 }

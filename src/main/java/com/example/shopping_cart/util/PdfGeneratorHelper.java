@@ -2,7 +2,6 @@ package com.example.shopping_cart.util;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -10,13 +9,13 @@ import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static com.itextpdf.text.BaseColor.*;
+import static com.example.shopping_cart.util.HexColorHelper.hexToBaseColor;
+import static com.itextpdf.text.BaseColor.BLACK;
+import static com.itextpdf.text.BaseColor.BLUE;
 
 @Component
-public class PdfGeneratorHelper {
+public class PdfGeneratorHelper extends PdfPageEventHelper {
 
-    @Autowired
-    private HexColorHelper hexColorHelper;
 
     private String backgroundImagePath;
     private Image backgroundImage;
@@ -65,13 +64,11 @@ public class PdfGeneratorHelper {
         Document document = new Document();
         PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputPath));
 
+        // 🔥 Set background image/watermark to apply on every page
+        writer.setPageEvent(this);
+
         setPdfEncryption(writer);
         document.open();
-
-        PdfContentByte canvas = writer.getDirectContentUnder();
-        Rectangle pageSize = document.getPageSize();
-
-        applyBackgroundOrWatermark(canvas, pageSize);
 
         addPdfTitle(document, "Category List");
 
@@ -80,6 +77,7 @@ public class PdfGeneratorHelper {
 
         document.close();
     }
+
 
     // ===== PRIVATE UTILITY METHODS =====
 
@@ -104,11 +102,15 @@ public class PdfGeneratorHelper {
      * @return true if background image applied successfully, else false.
      */
     private boolean tryApplyBackgroundImage(PdfContentByte canvas, Rectangle pageSize) {
-        if (backgroundImagePath == null) return false;
+        if (backgroundImagePath == null) {
+            return false;
+        }
 
         try {
             File file = new File(backgroundImagePath);
-            if (!file.exists()) return false;
+            if (!file.exists()) {
+                return false;
+            }
 
             backgroundImage = Image.getInstance(file.getAbsolutePath());
             backgroundImage.scaleToFit(pageSize.getWidth(), pageSize.getHeight());
@@ -143,7 +145,7 @@ public class PdfGeneratorHelper {
      */
     private boolean tryApplyBackgroundColor(PdfContentByte canvas, Rectangle pageSize) {
         try {
-            canvas.setColorFill(backgroundColor != null ? backgroundColor : hexColorHelper.hexToBaseColor("#9CC7EC"));
+            canvas.setColorFill(backgroundColor != null ? backgroundColor : hexToBaseColor("#9CC7EC"));
             canvas.rectangle(0, 0, pageSize.getWidth(), pageSize.getHeight());
             canvas.fill();
             return true;
@@ -178,7 +180,7 @@ public class PdfGeneratorHelper {
         document.add(title);
     }
 
-//      Dynamically generates a PdfPTable from the DTO list by reflecting on its fields.
+    //      Dynamically generates a PdfPTable from the DTO list by reflecting on its fields.
     private <T> PdfPTable generateDynamicTable(List<T> dtoList) {
         Class<?> dtoClass = dtoList.get(0).getClass();
         Field[] fields = dtoClass.getDeclaredFields();
@@ -193,7 +195,7 @@ public class PdfGeneratorHelper {
         return table;
     }
 
-//      Writes table header cells with field names.
+    //      Writes table header cells with field names.
     private void writeTableHeader(PdfPTable table, Field[] fields) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA);
         font.setColor(BLACK);
@@ -201,13 +203,13 @@ public class PdfGeneratorHelper {
         for (Field field : fields) {
             field.setAccessible(true);
             PdfPCell cell = new PdfPCell(new Phrase(toTitleCase(field.getName()), font));
-            cell.setBackgroundColor(hexColorHelper.hexToBaseColor("#9CECC1"));
+            cell.setBackgroundColor(hexToBaseColor("#9CECC1"));
             cell.setPadding(5);
             table.addCell(cell);
         }
     }
 
-//      Writes the data rows into the table by fetching values via reflection.
+    //      Writes the data rows into the table by fetching values via reflection.
     private <T> void writeTableData(PdfPTable table, List<T> dtoList, Field[] fields) {
         for (T item : dtoList) {
             for (Field field : fields) {
@@ -222,12 +224,22 @@ public class PdfGeneratorHelper {
         }
     }
 
-//      Converts camelCase or snake_case field names to Title Case strings for headers.
+    //      Converts camelCase or snake_case field names to Title Case strings for headers.
     private String toTitleCase(String input) {
         return input.replaceAll("([a-z])([A-Z])", "$1 $2")
                 .replace("_", " ")
                 .replaceAll("\\s+", " ")
                 .trim()
                 .replaceFirst(".", input.substring(0, 1).toUpperCase());
+    }
+
+
+    @Override
+    public void onEndPage(PdfWriter writer, Document document) {
+        PdfContentByte canvas = writer.getDirectContentUnder();
+        Rectangle pageSize = document.getPageSize();
+
+        // Always apply background/watermark per page
+        applyBackgroundOrWatermark(canvas, pageSize);
     }
 }

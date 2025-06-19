@@ -34,9 +34,9 @@ public class MyGlobalExceptionHandler extends RuntimeException {
         logger.error("handleException : ", ex);
 //        logger.error("handleException getCause : ", ex.getCause().getMessage());
 
-
+// Ask to sir what is send msg. because this exc. use multi error
         return new ResponseEntity<>(new
-                CommonResponse(false, ex.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
+                    CommonResponse(false, "ex.getMessage()", null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 

@@ -8,7 +8,7 @@ import java.awt.*;
 @Component
 public class HexColorHelper {
 
-    public BaseColor hexToBaseColor(String hex) {
+    public static BaseColor hexToBaseColor(String hex) {
         Color awtColor = Color.decode(hex); // java.awt.Color
         return new BaseColor(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
     }

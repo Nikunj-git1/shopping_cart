@@ -6,115 +6,104 @@ import com.example.shopping_cart.request_dto.CustDTO;
 import com.example.shopping_cart.request_dto.CustDTOResponse;
 import com.example.shopping_cart.request_dto.CustDTOUpdate;
 import com.example.shopping_cart.service.CustService;
-import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-@Slf4j
+import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
+
 @Service
-
 public class CustServiceImpl implements CustService {
 
     @Autowired
-    CustRepository custRepository;
+    private CustRepository custRepository;
 
     @Autowired
-    ModelMapper modelMapper;
+    private ModelMapper modelMapper;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
+
 
     @Override
     @CacheEvict(value = "custListCache", allEntries = true)
     public CustDTOResponse signup(CustDTO custDTO) {
-        Optional<CustEntity> optionalCustEntity = custRepository.findByAadhaarNo(custDTO.getAadhaarNo());
-
-        if (optionalCustEntity.isPresent()) {
-            throw new DataIntegrityViolationException(
-                    "This aadhaar no'" + custDTO.getAadhaarNo() + "' is already exists.");
-        }
+        custRepository.findByAadhaarNo(custDTO.getAadhaarNo())
+                .ifPresent(custEntity -> {
+                    throw new DataIntegrityViolationException(
+                            "This aadhaar no '" + custDTO.getAadhaarNo() + "' already exists.");
+                });
 
         CustEntity custEntity = modelMapper.map(custDTO, CustEntity.class);
         custEntity.setPswd(passwordEncoder.encode(custDTO.getPswd()));
+        custEntity = custRepository.save(custEntity);
 
-        return modelMapper.map(custRepository.save(custEntity), CustDTOResponse.class);
+        return mapEntityToResponse(custEntity);
     }
+
 
     @Override
     @Cacheable(value = "custListCache")
     public List<CustDTOResponse> getList() {
         List<CustEntity> custEntityList = custRepository.findAll();
-        List<CustDTOResponse> custDTOResponseList = new ArrayList<>();
 
-        for (CustEntity custEntity : custEntityList) {
-            CustDTOResponse dto = new CustDTOResponse();
-
-            dto.setCustId(custEntity.getCustId());
-            dto.setCustName(custEntity.getCustName());
-            dto.setAadhaarNo(custEntity.getAadhaarNo());
-            dto.setAddress(custEntity.getAddress());
-            dto.setCreatedAt(custEntity.getCreatedAt().toString());
-            custDTOResponseList.add(dto);
-        }
-
-        return custDTOResponseList;
+        return custEntityList.stream()
+                .map(this::mapEntityToResponse)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     @CacheEvict(value = "custListCache", allEntries = true)
     public CustDTOResponse update(CustDTOUpdate custDTOUpdate) {
+        CustEntity custEntity = custRepository.findById(custDTOUpdate.getCustId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "This customer id '" + custDTOUpdate.getCustId() + "' is not found."));
 
-        Optional<CustEntity> optionalCustEntity = custRepository.findById(custDTOUpdate.getCustId());
-        if (optionalCustEntity.isEmpty()) {
-            throw new NoSuchElementException(
-                    "This customer id '" + custDTOUpdate.getCustId() + "' is not found.");
-        }
-
-        Optional<CustEntity> duplicateAadhaarNo = custRepository.findByAadhaarNo(custDTOUpdate.getAadhaarNo());
-        if (duplicateAadhaarNo.isPresent() &&
-                !duplicateAadhaarNo.get().getCustId().equals(custDTOUpdate.getCustId())) {
+        if (custRepository.existsByAadhaarNoIgnoreCaseAndCustIdNot(
+                custDTOUpdate.getAadhaarNo(),
+                custDTOUpdate.getCustId())) {
             throw new DataIntegrityViolationException(
-                    "This aadhaar no'" + custDTOUpdate.getAadhaarNo() + "' is already exists.");
+                    "This aadhaar no '" + custDTOUpdate.getAadhaarNo() + "' already exists.");
         }
 
-        CustEntity custEntity = optionalCustEntity.get();
-        custEntity.setCustName(custDTOUpdate.getCustName());
-        custEntity.setAadhaarNo(custDTOUpdate.getAadhaarNo());
-        custEntity.setAddress(custDTOUpdate.getAddress());
-
+        modelMapper.map(custDTOUpdate, custEntity);
+        custEntity.setPswd(passwordEncoder.encode(custDTOUpdate.getPswd()));
+        custEntity.setUpdatedAt(new Date());
         custEntity = custRepository.save(custEntity);
 
-        CustDTOResponse dto = new CustDTOResponse();
-        dto.setCustId(custEntity.getCustId());
-        dto.setCustName(custEntity.getCustName());
-        dto.setAadhaarNo(custEntity.getAadhaarNo());
-        dto.setAddress(custEntity.getAddress());
-        dto.setCreatedAt(custEntity.getCreatedAt().toString());
-
-        return dto;
+        return mapEntityToResponse(custEntity);
     }
+
 
     @Override
     @CacheEvict(value = "custListCache", allEntries = true)
     public boolean delete(Integer custId) {
+        CustEntity custEntity = custRepository.findById(custId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "This customer id '" + custId + "' is not found."));
 
-        Optional<CustEntity> optionalCustEntity = custRepository.findById(custId);
-        if (optionalCustEntity.isEmpty()) {
-            throw new NoSuchElementException("This customer id '" + custId + "' is not found.");
-
-        }
         custRepository.deleteById(custId);
         return true;
+    }
+
+
+    /**
+     * Helper method to map entity to response DTO with formatted dates.
+     */
+    private CustDTOResponse mapEntityToResponse(CustEntity custEntity) {
+        CustDTOResponse response = modelMapper.map(custEntity, CustDTOResponse.class);
+        response.setCreatedAt(formatTimestamp(custEntity.getCreatedAt()));
+        response.setUpdatedAt(formatTimestamp(custEntity.getUpdatedAt()));
+        return response;
     }
 }

@@ -16,14 +16,14 @@ public interface CatService {
 
     Map<String, Object> createByImportExcel(MultipartFile excelFile, User user);
 
-    void exportCategoryPdf ();
+    void exportCategoryPdf();
 
     List<CatDTOResponse> getList(String status);
 
-    CatDTOResponse update(CatDTOUpdate catDTOUpdate);
+    CatDTOResponse update(CatDTOUpdate catDTOUpdate, User user);
 
-    CatDTOResponse updateStatus(int catId, String status);
+    CatDTOResponse updateStatus(Integer catId, String status, User user);
 
-    boolean delete(int catId);
+    boolean delete(Integer catId);
 
 }

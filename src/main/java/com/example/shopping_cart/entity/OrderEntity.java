@@ -7,6 +7,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "customer_order")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,7 +18,8 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderId;
     private Integer custId;
-    @Column(name = "order_date", insertable = false, updatable = false)
-    private Date orderDate;
-    private String status;
+    private Date orderDate = new Date();
+    private String status = "PENDING";
+    private Date updatedAt;
+    private Integer updatedBy;
 }

@@ -23,11 +23,12 @@ public class ItemEntity {
     private Integer subCatId;
     private String itemName;
     private Integer stockQty;
-    private Integer price;
+    private Double price;
     private Date expDate;
     private String status;
     private String photo;
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt = new Date();
     private Integer createdBy;
+    private Date updatedAt;
+    private Integer updatedBy;
 }

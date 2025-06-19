@@ -16,5 +16,4 @@ public class CustLoginDTO {
 
     @NotBlank(message = "Password is required")
     private String pswd;
-
 }

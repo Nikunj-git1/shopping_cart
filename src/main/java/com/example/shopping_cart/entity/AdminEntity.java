@@ -23,6 +23,5 @@ public class AdminEntity {
     private String adminName;
     private String pswd;
     private String adminRole = "Admin";
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt = new Date();
 }

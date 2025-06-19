@@ -15,6 +15,7 @@ public class UserController {
 
 
 //only for knowledge-how to spring internally work
+
     @GetMapping("/user")
     @Operation(summary = "Get user details")
     public String getCurrentUserDetails(@AuthenticationPrincipal User user) {
