@@ -16,4 +16,5 @@ public interface CustService {
     CustDTOResponse update (CustDTOUpdate custDTOUpdate);
 
     boolean delete (Integer custId);
+
 }

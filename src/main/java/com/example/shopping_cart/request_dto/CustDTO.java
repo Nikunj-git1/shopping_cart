@@ -2,6 +2,7 @@ package com.example.shopping_cart.request_dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,9 @@ public class CustDTO {
     private String custName;
 
     @NotBlank(message = "Aadhaar number is required")
+    @Pattern(regexp = "\\d{12}", message = "Aadhaar number must contain exactly 12 digits")
     private String aadhaarNo;
+
 
     @NotBlank(message = "Address is required")
     private String address;

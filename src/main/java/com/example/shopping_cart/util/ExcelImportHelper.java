@@ -22,7 +22,7 @@ public class ExcelImportHelper {
     private static final ThreadLocal<List<ExcelErrorDTOResponse>> threadLocalErrors = ThreadLocal.withInitial(ArrayList::new);
 
     // ✅ Entry Point: Step 12 - Master method to call in service
-    public <T> List<T> processExcelFile(MultipartFile file, Class<T> dtoClass) {
+    public static  <T> List<T> processExcelFile(MultipartFile file, Class<T> dtoClass) {
         clearValidationErrors();
         validateFileExtension(file);               // Step 1
         validateFileNotEmpty(file);                // Step 2
@@ -30,7 +30,7 @@ public class ExcelImportHelper {
     }
 
     // ✅ Step 1: Validate Excel File Extension
-    private void validateFileExtension(MultipartFile file) {
+    private static void validateFileExtension(MultipartFile file) {
         String fileName = file.getOriginalFilename();
         if (fileName == null || (!fileName.toLowerCase().endsWith(".xls") && !fileName.toLowerCase().endsWith(".xlsx"))) {
             throw new IllegalArgumentException("Invalid file format. Only .xls or .xlsx are supported.");
@@ -38,14 +38,14 @@ public class ExcelImportHelper {
     }
 
     // ✅ Step 2: Check if File is Empty
-    private void validateFileNotEmpty(MultipartFile file) {
+    private static void validateFileNotEmpty(MultipartFile file) {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file is empty.");
         }
     }
 
     // ✅ Step 3–11: Parse Excel, Map to DTOs, Validate Fields
-    private <T> List<T> parseAndValidateExcelRows(MultipartFile file, Class<T> dtoClass) {
+    private static <T> List<T> parseAndValidateExcelRows(MultipartFile file, Class<T> dtoClass) {
         List<T> validDTOs = new ArrayList<>();
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
@@ -126,14 +126,14 @@ public class ExcelImportHelper {
     }
 
     // ✅ Step 3: Check Header Count with DTO
-    private <T> void validateHeaderCount(List<String> headers, Class<T> dtoClass) {
+    private static <T> void validateHeaderCount(List<String> headers, Class<T> dtoClass) {
         if (headers.size() != dtoClass.getDeclaredFields().length) {
             throw new IllegalArgumentException("Header count does not match DTO field count.");
         }
     }
 
     // ✅ Step 4: Match Header Names with DTO Fields
-    private <T> void validateHeaderNames(List<String> headers, Class<T> dtoClass) {
+    private static <T> void validateHeaderNames(List<String> headers, Class<T> dtoClass) {
         Set<String> dtoFields = Arrays.stream(dtoClass.getDeclaredFields())
                 .map(Field::getName)
                 .collect(Collectors.toSet());
@@ -144,7 +144,7 @@ public class ExcelImportHelper {
     }
 
     // ✅ Step 6-8: Extract, Clean, and Convert Cell Value
-    private Object extractAndConvertCellValue(Cell cell, Class<?> targetType) {
+    private static Object extractAndConvertCellValue(Cell cell, Class<?> targetType) {
         if (cell == null) return null;
 
         try {
@@ -177,7 +177,7 @@ public class ExcelImportHelper {
     }
 
     // ✅ Helper: Convert to Title Case
-    private String toTitleCase(String input) {
+    private static String toTitleCase(String input) {
         return Arrays.stream(input.trim().split(" "))
                 .map(word -> word.isEmpty()
                         ? "" : Character.toUpperCase(word.charAt(0)) + word.substring(1).toLowerCase())
@@ -185,7 +185,7 @@ public class ExcelImportHelper {
     }
 
     // ✅ Helper: Extract headers
-    private List<String> extractHeaders(Row row) {
+    private static List<String> extractHeaders(Row row) {
         List<String> headers = new ArrayList<>();
         for (Cell cell : row) {
             headers.add(cell.getStringCellValue().trim());
@@ -194,16 +194,19 @@ public class ExcelImportHelper {
     }
 
     // ✅ Step 9 & 14: Error Handling Methods
-    public List<ExcelErrorDTOResponse> getValidationErrors() {
-        return threadLocalErrors.get();
+    public static List<ExcelErrorDTOResponse> getValidationErrors() {
+        List<ExcelErrorDTOResponse> temp = threadLocalErrors.get();
+
+        return temp;
     }
 
-    public void clearValidationErrors() {
+    public static void clearValidationErrors() {
+
         threadLocalErrors.remove();
     }
 
     // ✅ नया मेथड: फाइनल JSON रिस्पॉन्स तैयार करता है
-    public Map<String, Object> buildImportResponseDataOnly(
+    public static Map<String, Object> buildImportResponseDataOnly(
             List<?> validDTOs,
             List<ExcelErrorDTOResponse> validationErrors,
             int inserted,
@@ -212,11 +215,16 @@ public class ExcelImportHelper {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("errors", validationErrors);
 
+        // ✅ Unique error rowNumbers only (Set will auto-remove duplicates)
+        Set<Integer> uniqueErrorRows = validationErrors.stream()
+                .map(ExcelErrorDTOResponse::getRowNumber)
+                .collect(Collectors.toSet());
+
         Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("total_row", validDTOs.size() + validationErrors.size());
+        summary.put("total_row", validDTOs.size() + uniqueErrorRows.size());
         summary.put("total_insert_row", inserted);
         summary.put("total_update_row", updated);
-        summary.put("total_error_row", validationErrors.size());
+        summary.put("total_error_row", uniqueErrorRows.size());
 
         data.put("summary", summary);
 

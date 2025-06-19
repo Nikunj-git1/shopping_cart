@@ -23,11 +23,12 @@ public class SubCatEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Integer subCatId;
-    private int catId;
+    private Integer catId;
     private String subCatName;
     private String status;
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt = new Date();
     private Integer createdBy;
+    private Date updatedAt;
+    private Integer updatedBy;
 
 }

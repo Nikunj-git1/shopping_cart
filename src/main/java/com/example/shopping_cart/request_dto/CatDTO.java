@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
 @AllArgsConstructor
@@ -18,7 +17,7 @@ public class CatDTO {
     @NotBlank(message = "Category name is required")
     private String catName;
 
-    //    think witch way is best one line or double line for user info of criteria
+//        think witch way is best one line or double line for user info of criteria
 //    @NotBlank(message = "Status must be either 'Active' or 'Inactive'")
     @NotBlank(message = "Status is required")
     @Pattern(regexp = "^(Active|Inactive)$", message = "Status must be either Active or Inactive")

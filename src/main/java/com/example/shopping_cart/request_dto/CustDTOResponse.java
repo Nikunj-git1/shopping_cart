@@ -2,15 +2,13 @@ package com.example.shopping_cart.request_dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonPropertyOrder({"custId", "custName", "aadhaarNo", "address", "createdAt"})
+@JsonPropertyOrder({"custId", "custName", "aadhaarNo", "address", "createdAt", "updatedAt"})
 
 public class CustDTOResponse {
 
@@ -19,4 +17,5 @@ public class CustDTOResponse {
     private String aadhaarNo;
     private String address;
     private String createdAt;
+    private String updatedAt;
 }

@@ -13,6 +13,7 @@ public class CommonException {
 
     @Override
     public String toString() {
+
         return "CommonException{" +
                 "status=" + status +
                 ", message='" + message + '\'' +

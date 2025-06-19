@@ -25,6 +25,6 @@ public class CustEntity {
     private String aadhaarNo;
     private String address;
     private String pswd;
-  @Column(name = "created_at", insertable = false, updatable = false)
-    private Date createdAt;
+    private Date createdAt = new Date();
+    private Date updatedAt;
 }
