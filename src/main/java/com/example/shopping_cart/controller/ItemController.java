@@ -90,4 +90,25 @@ public class ItemController {
 
         return ResGenerator.success("item delete successfully", itemService.delete(itemId));
     }
+
+
+    @GetMapping("/get-list-page")
+    public ResponseEntity<CommonResponse> getListWithPagination(@RequestParam(defaultValue = "1", required = false)
+                                                                @Positive(message = "Page no must be a positive number")
+                                                                Integer pageNo,
+
+                                                                @RequestParam(defaultValue = "3", required = false)
+                                                                @Positive(message = "No of record per page must be a positive number")
+                                                                Integer pageSize,
+
+                                                                @RequestParam(defaultValue = "price", required = false)
+                                                                @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "SortBy must be alphanumeric with underscores only")
+                                                                String sortBy,
+
+                                                                @RequestParam(defaultValue = "DESC", required = false)
+                                                                @Pattern(regexp = "^(?i)(asc|desc)$", message = "SortDir must be 'asc' or 'desc'")
+                                                                String sortDir) {
+
+        return ResGenerator.success("item list based on your request", itemService.getListPageWise(pageNo, pageSize, sortBy, sortDir));
+    }
 }

@@ -1,9 +1,7 @@
 package com.example.shopping_cart.service_impl;
 
-import com.example.shopping_cart.entity.CatEntity;
 import com.example.shopping_cart.entity.ItemEntity;
 import com.example.shopping_cart.repository.ItemRepository;
-import com.example.shopping_cart.request_dto.CatDTOResponse;
 import com.example.shopping_cart.request_dto.ItemDTO;
 import com.example.shopping_cart.request_dto.ItemDTOResponse;
 import com.example.shopping_cart.request_dto.ItemDTOUpdate;
@@ -15,6 +13,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,10 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
 import static com.example.shopping_cart.util.PhotoUploadHelper.cleanFileName;
@@ -182,6 +186,22 @@ public class ItemServiceImpl implements ItemService {
         return true;
     }
 
+
+    @Override
+//    @Cacheable(value = )
+    public List<ItemDTOResponse> getListPageWise(Integer pageNo, Integer pageSize, String sortBy, String sortDir) {
+        PageRequest itemDTOResPagebl = PageRequest.of(pageNo, pageSize, Sort.Direction.valueOf(sortDir), sortBy);
+
+//            if need to Multiple Sorting
+//        Sort sort = Sort.by(Sort.Order.asc("price"), Sort.Order.asc("stockQty"));
+        Page<ItemEntity> itemsPage = itemRepository.findAll(itemDTOResPagebl);
+
+        List<ItemDTOResponse> dtoList = itemsPage.getContent()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+        return dtoList;
+    }
 
     private ItemDTOResponse mapToResponse(ItemEntity itemEntity) {
         ItemDTOResponse response = modelMapper.map(itemEntity, ItemDTOResponse.class);

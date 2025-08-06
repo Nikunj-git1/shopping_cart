@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ThymeleafController {
 
     @GetMapping("/welcome")
-    public String welcome(){
+    public String welcome() {
+
         return "welcome";
     }
 
     @GetMapping("/login")
-    public String login(){
+    public String login() {
+
         return "login";
     }
 
