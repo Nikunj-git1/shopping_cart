@@ -39,7 +39,7 @@ public class PhotoUploadAndView_asImpl {
     ModelMapper modelMapper;
 
 
-    @PostMapping("/item")
+    @PostMapping("/item2")
     public ItemDTOResponse uploadItemPhoto(@RequestParam MultipartFile file,
                                            @RequestParam Integer itemId) throws IOException {
 

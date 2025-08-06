@@ -22,4 +22,6 @@ public interface ItemService {
 
     boolean delete(Integer itemId);
 
+    List<ItemDTOResponse> getListPageWise(Integer pageNo, Integer pageSize, String sortBy, String sorDir);
+
 }
