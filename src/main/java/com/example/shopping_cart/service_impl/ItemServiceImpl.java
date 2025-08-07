@@ -1,16 +1,12 @@
 package com.example.shopping_cart.service_impl;
 
-import com.example.shopping_cart.entity.CatEntity;
 import com.example.shopping_cart.entity.ItemEntity;
 import com.example.shopping_cart.repository.ItemRepository;
-import com.example.shopping_cart.request_dto.CatDTOResponse;
 import com.example.shopping_cart.request_dto.ItemDTO;
 import com.example.shopping_cart.request_dto.ItemDTOResponse;
 import com.example.shopping_cart.request_dto.ItemDTOUpdate;
 import com.example.shopping_cart.service.ItemService;
-import org.eclipse.angus.mail.imap.protocol.Item;
 import org.modelmapper.ModelMapper;
-import org.springdoc.core.converters.models.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,14 +26,16 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
 import static com.example.shopping_cart.util.PhotoUploadHelper.cleanFileName;
 
 @Service
-
+//add new line for testing
 public class ItemServiceImpl implements ItemService {
 
     @Autowired
