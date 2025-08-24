@@ -169,19 +169,4 @@ public class MyGlobalExceptionHandler extends RuntimeException {
         response.put("status", false);
         return ResponseEntity.badRequest().body(response);
     }
-
-
-
-
-
-//     @ExceptionHandler(InternalAuthenticationServiceException.class)
-//     public ResponseEntity<CommonResponse> handleAuthServiceException(InternalAuthenticationServiceException ase) {
-//
-//         logger.error("handleException", ase);
-//         // Root cause निकालें (optional, ज़्यादा स्पष्ट message देने के लिए)
-//         String errorMessage = ase.getCause() != null ? ase.getCause().getMessage() : "Authentication failed";
-//
-//         CommonResponse response = new CommonResponse(false, errorMessage, null);
-//         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED); // 401
-//     }
 }

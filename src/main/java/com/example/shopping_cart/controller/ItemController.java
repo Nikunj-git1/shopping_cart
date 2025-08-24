@@ -7,7 +7,6 @@ import com.example.shopping_cart.request_dto.ItemDTOUpdate;
 import com.example.shopping_cart.service.ItemService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -31,8 +30,6 @@ public class ItemController {
     @Autowired
     ItemService itemService;
 
-//line new add
-//3rd line add
     @PostMapping("/create")
     public ResponseEntity<CommonResponse> create(@ModelAttribute @Valid ItemDTO itemDTO,
                                                  @AuthenticationPrincipal User user) throws IOException {

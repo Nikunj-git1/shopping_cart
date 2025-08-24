@@ -14,14 +14,6 @@ import lombok.NoArgsConstructor;
 
 public class OrderItemDTO {
 
-    @NotNull(message = "Order item ID cannot be null")
-    @Positive(message = "Order item ID must be a positive number")
-    private Integer orderItemId;
-
-    @NotNull(message = "Order ID cannot be null")
-    @Positive(message = "Order ID must be a positive number")
-    private Integer orderId;
-
     @NotNull(message = "Item ID cannot be null")
     @Positive(message = "Item ID must be a positive number")
     private Integer itemId;

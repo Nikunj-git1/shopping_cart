@@ -20,46 +20,34 @@ import java.util.Date;
 
 @Component
 public class JwtHelper {
-
     // गुप्त कुंजी जिसे टोकन पर हस्ताक्षर करने के लिए उपयोग किया जाता है
 //    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final String SECRET_KEY_STRING = "wM5xL2fWkDPJkqDhd9P9rVtYgyy5TYHuzh5pCu6tH+s=";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY_STRING));
-
-
-    // टोकन की वैधता अवधि (मिनट में)
     private static final int DAYS = 86400;
 
-    // उपयोगकर्ता के ईमेल के लिए एक JWT टोकन बनाएँ
     public static String generateToken(String adminName) {
+        log.info("-----generateToken() {} ", adminName);
         var now = Instant.now();
-String jwt = Jwts.builder()
+        String jwt = Jwts.builder()
                 .subject(adminName) // टोकन का विषय
                 .issuedAt(Date.from(now)) // जारी करने की तिथि
                 .expiration(Date.from(now.plus(DAYS, ChronoUnit.DAYS))) // समाप्ति तिथि
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // हस्ताक्षर करें
                 .compact(); // टोकन को स्ट्रिंग में बदलें
-        System.out.println("Received token: " + jwt);
-
         return jwt;
     }
 
     // टोकन से उपयोगकर्ता नाम निकालें
     public static String extractUsername(String token) {
+        log.info("-----extractUsername() {} ", token);
 
         return getTokenBody(token).getSubject();
     }
 
-    // टोकन की वैधता की जांच करें
-    public static Boolean validateToken(String token, UserDetails userDetails) {
-
-        final String username = extractUsername(token);
-
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-    }
-
     // यह method टोकन से claim (payload) निकालता है
     private static Claims getTokenBody(String token) {
+        log.info("-----getTokenBody {} ", token);
         try {
             // Null या खाली टोकन की जांच
             if (token == null || token.trim().isEmpty()) {
@@ -78,20 +66,27 @@ String jwt = Jwts.builder()
                     .parseSignedClaims(token)          // दिए गए टोकन को पार्स करें और claims निकालें
                     .getPayload();                     // केवल payload (claims) हिस्सा वापस करें
         } catch (ExpiredJwtException e) {
-        throw new RuntimeException("टोकन समाप्त हो गया है: " + e.getMessage());
-    } catch (SignatureException e) {
-        throw new RuntimeException("सिग्नेचर अमान्य है: " + e.getMessage());
-    } catch (
-    MalformedJwtException e) {
-        throw new RuntimeException("JWT फॉर्मेट अमान्य है: " + e.getMessage());
-    } catch (IllegalArgumentException | UnsupportedJwtException e) {
-        throw new RuntimeException("अवैध JWT टोकन: " + e.getMessage());
+            throw new RuntimeException("टोकन समाप्त हो गया है: " + e.getMessage());
+        } catch (SignatureException e) {
+            throw new RuntimeException("सिग्नेचर अमान्य है: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            throw new RuntimeException("JWT फॉर्मेट अमान्य है: " + e.getMessage());
+        } catch (IllegalArgumentException | UnsupportedJwtException e) {
+            throw new RuntimeException("अवैध JWT टोकन: " + e.getMessage());
+        }
     }
 
+    // टोकन की वैधता की जांच करें
+    public static Boolean validateToken(String token, UserDetails userDetails) {
+        log.info("-----validateToken {} {} ", token, userDetails);
+        final String username = extractUsername(token);
+
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
     // जांचें कि टोकन समाप्त हुआ या नहीं
     private static boolean isTokenExpired(String token) {
+        log.info("-----getTokenBody {} ", token);
         Claims claims = getTokenBody(token); // टोकन से claims प्राप्त करें
 
         return claims.getExpiration().before(new Date()); // expiration तारीख अभी की तारीख से पहले है या नहीं

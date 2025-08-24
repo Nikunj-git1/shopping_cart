@@ -63,7 +63,7 @@ public class OrderServiceImpl implements OrderService {
                     return item;
                 })
                 .collect(Collectors.toList());
-
+        orderItemRepository.saveAll(orderItems);
 
         return order.getOrderId();
     }

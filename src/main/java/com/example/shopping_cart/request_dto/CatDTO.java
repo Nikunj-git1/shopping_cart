@@ -20,6 +20,6 @@ public class CatDTO {
 //        think witch way is best one line or double line for user info of criteria
 //    @NotBlank(message = "Status must be either 'Active' or 'Inactive'")
     @NotBlank(message = "Status is required")
-    @Pattern(regexp = "^(Active|Inactive)$", message = "Status must be either Active or Inactive")
+    @Pattern(regexp = "^(?i)(Active|Inactive)$", message = "Status should be 'Active' or 'Inactive' (it's non-sensitive)")
     private String status;
 }

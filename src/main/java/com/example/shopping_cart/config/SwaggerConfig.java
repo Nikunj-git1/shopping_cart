@@ -22,7 +22,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         List<Tag> tags = new LinkedList<>();
 
-        // टैग्स को अपने क्रम में जोड़ें
+        // For order to UI view of APIs
         tags.add(new Tag().name("Admin API").description("Signup and Login"));
         tags.add(new Tag().name("Category API").description("For CRUD operation of categories"));
         tags.add(new Tag().name("Sub-category API").description("For CRUD operation of sub-categories"));
@@ -31,17 +31,13 @@ public class SwaggerConfig {
         tags.add(new Tag().name("Order API").description("For CRUD operation of orders"));
 
         return new OpenAPI()
-                .info
-                        (new Info()
-                                .title("Shopping Cart API")
-                                .version("1.0")
-                                .description("Swagger के जरिए JWT प्रोटेक्टेड API को टेस्ट करने के लिए")
-                        )
-                .servers(
-                        List.of(
-                                new Server().url("http://localhost:8080").description("Local"),
-                                new Server().url("http://localhost:8081").description("Live")
-                        ))
+                .info(new Info()
+                        .title("Shopping Cart API")
+                        .version("1.0")
+                        .description("To test JWT-protected APIs using Swagger"))
+                .servers(List.of(
+                        new Server().url("http://localhost:8080").description("Local"),
+                        new Server().url("http://localhost:8081").description("Live")))
                 .tags(tags)
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
@@ -51,9 +47,7 @@ public class SwaggerConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .in(SecurityScheme.In.HEADER)
-                        )
-                );
+                                        .in(SecurityScheme.In.HEADER)));
     }
 
     @Bean
@@ -67,8 +61,7 @@ public class SwaggerConfig {
                         "/admin/item/**",
                         "/admin/order/**",
                         "/customer/**",
-                        "/customer/item/**"
-                )
+                        "/customer/item/**")
                 .build();
     }
 

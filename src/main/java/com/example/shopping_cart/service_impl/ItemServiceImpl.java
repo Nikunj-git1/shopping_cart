@@ -30,12 +30,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 
 import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
 import static com.example.shopping_cart.util.PhotoUploadHelper.cleanFileName;
 
 @Service
-//add new line for testing
 public class ItemServiceImpl implements ItemService {
 
     @Autowired
@@ -188,7 +188,7 @@ public class ItemServiceImpl implements ItemService {
 
 
     @Override
-//    @Cacheable(value = )
+//    @Cacheable(value = ) not need in Pagenations Methods
     public List<ItemDTOResponse> getListPageWise(Integer pageNo, Integer pageSize, String sortBy, String sortDir) {
         PageRequest itemDTOResPagebl = PageRequest.of(pageNo, pageSize, Sort.Direction.valueOf(sortDir), sortBy);
 
@@ -211,18 +211,45 @@ public class ItemServiceImpl implements ItemService {
 
         return response;
     }
+}
+
+@FunctionalInterface
+interface Printer {
+    void print(String message);
+}
+
+class MessagePrinter {
+
+    // A normal instance method
+    public void showMessage(String message) {
+
+            System.out.println("Message: " + message);
+    }
+}
 
 
-    private Date getSqlDateForamt(ItemDTO itemDTO) {
-        DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        Date sqlDate;
-        try {
-            Date parsed = formatter.parse(itemDTO.getExpDate());
-            sqlDate = new Date(parsed.getTime());
-        } catch (ParseException e) {
-            throw new RuntimeException("Invalid date format, expected dd-MM-yyyy", e);
+class Main {
+    public static void main(String[] args) {
+        MessagePrinter printer = new MessagePrinter();
+
+        class MessagePrinter1 implements Printer {
+
+            public void print(String message) {
+
+                System.out.println("Message: " + message);
+            }
         }
 
-        return sqlDate;
+        Printer lambdaPrinter =  (msg) -> System.out.println("Message: " + msg);
+        lambdaPrinter.print("2. Lambda Call");
+    }
+}
+
+class MyConsumer implements Consumer<ItemEntity> {
+
+    @Override
+    public void accept(ItemEntity itemEntity) {
+        throw new DataIntegrityViolationException(
+                "This item '" + itemEntity.getItemName() + "' is  already exists.");
     }
 }

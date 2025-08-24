@@ -24,77 +24,71 @@ import java.nio.file.AccessDeniedException;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
-    JwtHelper jwtHelper;
-
     // JwtAuthFilter एक कस्टम फिल्टर क्लास है जो JWT टोकन को सत्यापित करती है
+    // JwtAuthFilter is a custom filter class that verifies JWT tokens
     private final UserLoginServiceImpl userLoginServiceImpl;
     private final ObjectMapper objectMapper;
 
     public JwtAuthFilter(UserLoginServiceImpl userLoginServiceImpl, ObjectMapper objectMapper) {
+        log.info("-----JwtAuthFilter {} {} ", userLoginServiceImpl, objectMapper);
         this.userLoginServiceImpl = userLoginServiceImpl;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-
-// यह ओवरराइड मेथड हर HTTP अनुरोध पर कॉल होता है
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        log.info("-----doFilterInternal {} {} {} ", request, response, filterChain);
         String path = request.getRequestURI();
 
-// Swagger URLs को बायपास किया जाता है
+// To bypass Swagger URLs
         if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-// Authorization हेडर से JWT टोकन को प्राप्त किया जाता है
+// The JWT token is extracted from the Authorization header
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
 
-// यदि हेडर "Bearer " से शुरू होता है तो टोकन को अलग करें
+// If the header starts with "Bearer ", extract the token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+
             username = JwtHelper.extractUsername(token);
         }
         if (token == null) {
-
-// यदि टोकन null है, तो यह अनुरोध को अगले फिल्टर में पास कर देगा
+// If the token is null, pass the request to the next filter
             filterChain.doFilter(request, response);
-            return; // टोकन नहीं होने पर बाकी प्रोसेस को स्किप कर देता है
+            return; // Skip the rest of the process if token is missing
         }
 
-// यदि यूज़रनेम उपलब्ध है और सिक्योरिटी कॉन्टेक्स्ट में कोई ऑथेंटिकेशन नहीं है)
-
-
+// यदि यूज़रनेम उपलब्ध है और सिक्योरिटी कॉन्टेक्स्ट में कोई ऑथेंटिकेशन नहीं है
+// If username is available and no authentication is present in the security context
         try {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userLoginServiceImpl.loadUserByUsername(username);
-// यूज़र की डिटेल्स प्राप्त की जाती हैं
+// User details are retrieved
                 if (JwtHelper.validateToken(token, userDetails)) {
-// यदि टोकन वैध है तो
-                    logger.info("if (JwtHelper.validateToken---------");
-
+// If the token is valid
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, null);
 // एक नया ऑथेंटिकेशन टोकन तैयार किया जाता है
-
+// A new authentication token is created
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-// अनुरोध की डिटेल्स ऑथेंटिकेशन में सेट की जाती हैं
-
+// Set the request details into the authentication object
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-// सिक्योरिटी कॉन्टेक्स्ट में ऑथेंटिकेशन सेट किया जाता है
+// Set authentication in the security context
                 }
             }
             filterChain.doFilter(request, response);
-// अनुरोध को अगली फिल्टर चेन में पास किया जाता है
+// Pass the request to the next filter in the chain
         } catch (AccessDeniedException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-// कोई भी अपवाद आने पर Forbidden (403) स्टेटस कोड सेट किया जाता है
-
+// Set Forbidden (403) status code on any exception
             response.getWriter().write("Access denied");
-// और क्लाइंट को "Access denied" संदेश भेजा जाता है
+// Send "Access denied" message to the client
         }
     }
 }

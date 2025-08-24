@@ -19,7 +19,7 @@ public class OrderEntity {
     private Integer orderId;
     private Integer custId;
     private Date orderDate = new Date();
-    private String status = "PENDING";
+    private String status = "Pending";
     private Date updatedAt;
     private Integer updatedBy;
 }

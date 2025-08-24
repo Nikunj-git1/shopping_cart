@@ -1,9 +1,8 @@
 package com.example.shopping_cart.controller;
 
-import com.example.shopping_cart.repository.CustRepository;
-import com.example.shopping_cart.request_dto.OrderItemDTO;
 import com.example.shopping_cart.comman_response_dto.CommonResponse;
 import com.example.shopping_cart.comman_response_dto.ResGenerator;
+import com.example.shopping_cart.request_dto.OrderItemDTO;
 import com.example.shopping_cart.service.OrderService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,9 +31,6 @@ public class OrderController {
     @Autowired
     OrderService orderService;
 
-    @Autowired
-    CustRepository custRepository;
-
 
     @PostMapping("/create")
     public ResponseEntity<CommonResponse> create(@RequestBody @Valid List<OrderItemDTO> itemsList,
@@ -62,7 +58,7 @@ public class OrderController {
 
                                                        @PathVariable(required = true)
                                                        @Pattern(
-                                                               regexp = "^(PENDING|COMPLETED|CANCELLE)$",
+                                                               regexp = "^(PENDING|COMPLETED|CANCELLED)$",
                                                                message = "Status must be one of: PENDING, COMPLETED," +
                                                                        " CANCELLED"
                                                        )

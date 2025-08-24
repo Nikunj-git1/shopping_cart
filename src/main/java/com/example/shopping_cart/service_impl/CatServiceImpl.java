@@ -21,17 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.example.shopping_cart.util.CustomizeDateFormat.formatTimestamp;
 import static com.example.shopping_cart.util.ExcelImportHelper.*;
 
 @Service
-public class
-
-
-
-CatServiceImpl implements CatService {
+public class CatServiceImpl implements CatService {
 
     @Autowired
     private CatRepository catRepository;
@@ -160,8 +157,8 @@ CatServiceImpl implements CatService {
                 .collect(Collectors.toList());
 
         // Step 3: Setup styling and export to PDF
-        String fileSavingPath = "D:/Git/shopping_cart/pdf-generated/category_list.pdf";
-        String bgImagePath = "D:/Git/shopping_cart/pdf-background-image/bg-1.jpg";
+        String fileSavingPath = "D:/Java_Project/shopping_cart/pdf-generated/category_list.pdf";
+        String bgImagePath = "D:/Java_Project/shopping_cart/pdf-background-image/bg-1.jpg";
 
         try {
             pdfGeneratorHelper

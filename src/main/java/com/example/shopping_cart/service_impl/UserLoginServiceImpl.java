@@ -32,7 +32,7 @@ public class UserLoginServiceImpl implements UserDetailsService {
 
 
     public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        log.info("loadUserByUsername --------{}");
+        log.info("-------loadUserByUsername {} ", name);
         Set<GrantedAuthority> set = new HashSet<>();
 
         Optional<AdminEntity> optionalAdminEntity = adminRepository.findByAdminName(name);
