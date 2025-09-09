@@ -147,8 +147,7 @@ public class ItemServiceImpl implements ItemService {
         Integer updatedBy = userLoginServiceImpl.getAdminId(user);
 
         modelMapper.map(itemDTOUpdate, itemEntity);
-        itemEntity.setExpDate(sqlDate
-        );
+        itemEntity.setExpDate(sqlDate);
         itemEntity.setUpdatedAt(new Date());
         itemEntity.setUpdatedBy(updatedBy);
         itemEntity = itemRepository.save(itemEntity);

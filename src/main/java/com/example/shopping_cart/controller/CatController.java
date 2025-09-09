@@ -60,7 +60,7 @@ public class CatController {
         catService.exportCategoryPdf();
 
         return ResGenerator.success(
-                "PDF saved to local file system at D:/java_practice/shopping_cart/pdf-generated",
+                "PDF saved to local file system at D:/java_project/shopping_cart/pdf-generated",
                 null);
     }
 
